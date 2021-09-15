@@ -14,7 +14,7 @@
 * Windows 10
 
 ### Installing
-* download game from [here](https://github.com/Fathursyafeei/IncrementalGame/releases/download/1.0/Build-IncrementalGame-windows.zip)
+* download game from [here](https://github.com/Fathursyafeei/2D_endless_runner/releases/download/1.0/2D_endless-windows.zip)
 
 
 ## Authors
