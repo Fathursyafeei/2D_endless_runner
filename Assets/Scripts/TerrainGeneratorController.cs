@@ -9,6 +9,9 @@ public class TerrainGeneratorController : MonoBehaviour
     public List<TerrainTemplateController> terrainTemplates;
     public float terrainTemplateWidth;
 
+    [Header("Force Early Template")]
+    public List<TerrainTemplateController> earlyTerrainTemplates;
+
     [Header("Generator Area")]
     public Camera gameCamera;
     public float areaStartOffset;
@@ -21,14 +24,28 @@ public class TerrainGeneratorController : MonoBehaviour
 
     private const float debugLineHeight = 10.0f;
 
+    //pool list
+    private Dictionary<string, List<GameObject>> pool;
+
+
     // Start is called before the first frame update
     private void Start()
     {
+        pool = new Dictionary<string, List<GameObject>>();
+
+        spawnedTerrain = new List<GameObject>();
 
         lastGeneratedPositionX = GetHorizontalPositionStart();
         lastRemovedPositionX = lastGeneratedPositionX - terrainTemplateWidth;
 
-        spawnedTerrain = new List<GameObject>();
+        foreach(TerrainTemplateController terrain in earlyTerrainTemplates)
+        {
+            GenerateTerrain(lastGeneratedPositionX,terrain);
+            //generate
+            lastGeneratedPositionX += terrainTemplateWidth;
+        }
+
+        
         while (lastGeneratedPositionX < GetHorizontalPositionEnd())
         {
             GenerateTerrain(lastGeneratedPositionX);
@@ -48,7 +65,7 @@ public class TerrainGeneratorController : MonoBehaviour
             lastGeneratedPositionX += terrainTemplateWidth;
         }
 
-        while (lastRemovedPositionX < GetHorizontalPositionStart())
+        while (lastRemovedPositionX + terrainTemplateWidth < GetHorizontalPositionStart())
         {
             lastRemovedPositionX += terrainTemplateWidth;
             RemoveTerrain(lastRemovedPositionX);
@@ -66,9 +83,18 @@ public class TerrainGeneratorController : MonoBehaviour
         return gameCamera.ViewportToWorldPoint(new Vector2(1f, 0f)).x + areaEndOffset;
     }
 
-    private void GenerateTerrain(float posX)
+    private void GenerateTerrain(float posX, TerrainTemplateController forceTerrain = null)
     {
-        GameObject newTerrain = Instantiate(terrainTemplates[Random.Range(0, terrainTemplates.Count)].gameObject, transform);
+        GameObject newTerrain = null;
+
+        if (forceTerrain == null)
+        {
+            newTerrain = GenerateFromPool(terrainTemplates[Random.Range(0, terrainTemplates.Count)].gameObject, transform);
+        }
+        else
+        {
+            newTerrain = GenerateFromPool(forceTerrain.gameObject, transform);
+        }
 
         newTerrain.transform.position = new Vector2(posX, 0f);
 
@@ -93,11 +119,49 @@ public class TerrainGeneratorController : MonoBehaviour
         if (terrainToRemove != null)
         {
             spawnedTerrain.Remove(terrainToRemove);
-            Destroy(terrainToRemove);
+            ReturnToPool(terrainToRemove);
         }
     }
 
+    // pool function
+    private GameObject GenerateFromPool(GameObject item, Transform parent)
+    {
+        if (pool.ContainsKey(item.name))
+        {
+            // if item available in pool
+            if(pool[item.name].Count > 0)
+            {
+                GameObject newItemFromPool = pool[item.name][0];
+                pool[item.name].Remove(newItemFromPool);
+                newItemFromPool.SetActive(true);
+                return newItemFromPool;
+            }
+        }
+        else
+        {
+            //if item list not define, create one
+            pool.Add(item.name, new List<GameObject>());
+        }
 
+        //create new one if no item available in pool
+        GameObject newItem = Instantiate(item, parent);
+        newItem.name = item.name;
+        return newItem;
+    }
+
+    private void ReturnToPool(GameObject item)
+    {
+        if (!pool.ContainsKey(item.name))
+        {
+            Debug.LogError("INVALID POOL ITEM!");
+        }
+
+        pool[item.name].Add(item);
+        item.SetActive(false);
+    }
+
+
+    //debug
     private void OnDrawGizmos()
     {
         Vector3 areaStartPosition = transform.position;

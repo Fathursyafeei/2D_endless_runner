@@ -8,6 +8,8 @@ public class CharacterSoundController : MonoBehaviour
     public AudioClip jump;
     private AudioSource audioPlayer;
 
+    public AudioClip scoreHighlight;
+
 
     // Start is called before the first frame update
     private void Start()
@@ -18,6 +20,11 @@ public class CharacterSoundController : MonoBehaviour
     public void PlayJump()
     {
         audioPlayer.PlayOneShot(jump);
+    }
+
+    public void PlayScoreHighlight()
+    {
+        audioPlayer.PlayOneShot(scoreHighlight);
     }
 
     // Update is called once per frame
