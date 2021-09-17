@@ -21,7 +21,8 @@
 * [Muhammad Faturahman Bancin](https://www.instagram.com/art.of.fatur)
 
 ## Version History
-* 0.1
+* 1.1
+* 1.0
     * Initial Release
     
 ## Acknowledgments
